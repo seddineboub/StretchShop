@@ -1,42 +1,15 @@
 trigger:
 - master
 
-resources:
-- repo: self
+pool:
+  name: Default
 
-variables:
-  tag: '$(Build.BuildId)'
-
-stages:
-- stage: Build
-  displayName: Build image
-  jobs:
-  - job: Build
-    displayName: Build
-    pool:
-      vmImage: ubuntu-latest
-    steps:
-    - script: az login --service-principal -u df551e12-dfec-4169-8feb-b1e7c3a30887 -p 3~D8Q~JDeNBXKhjrDbbejGmNANgxbynD6EjICaMD --tenant 84f1e4ea-8554-43e1-8709-f0b8589ea118
-      displayName: 'az login'
-
-    - script: az acr login --name eloacrprd
-      displayName: 'az acr login'
-
-    - task: Docker@2
-      displayName: Build an image
-      inputs:
-        containerRegistry: 'eloacrprd' 
-        repository: '0.001'
-        command: build
-        dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
-        tags: |
-          $(tag)
-
-    - task: Docker@2
-      displayName: Push the image
-      inputs:
-        containerRegistry: 'eloacrprd' 
-        repository: '0.001'
-        command: push
-        tags: |
-          $(tag)
+steps:
+- script: az login --service-principal -u df551e12-dfec-4169-8feb-b1e7c3a30887 -p 3~D8Q~JDeNBXKhjrDbbejGmNANgxbynD6EjICaMD --tenant 84f1e4ea-8554-43e1-8709-f0b8589ea118
+  displayName: 'az login'
+- script: az acr login --name eloacrprd
+  displayName: 'az acr login'
+- script: sudo docker build -t eloacrprd.azurecr.io/0.001:latest $(System.DefaultWorkingDirectory)
+  displayName: 'docker build'
+- script: sudo docker push eloacrprd.azurecr.io/0.001:latest
+  displayName: 'docker push'
